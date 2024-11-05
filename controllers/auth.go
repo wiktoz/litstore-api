@@ -1,15 +1,12 @@
 package controllers
 
 import (
-	"fmt"
 	"litstore/api/initializers"
 	"litstore/api/models"
+	"litstore/api/utils"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -57,17 +54,9 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate JWT token
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	token, err := utils.GenerateJWT(user.ID, "access")
 
 	if err != nil {
-		fmt.Print(err)
-
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Internal error",
@@ -76,9 +65,15 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Set token to cookie
-
-	c.SetCookie("token", tokenString, 86400, "", "localhost", true, true)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "jwt_access_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(utils.JwtAccessExp),
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

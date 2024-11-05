@@ -3,6 +3,7 @@ package main
 import (
 	"litstore/api/controllers"
 	"litstore/api/initializers"
+	"litstore/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +23,7 @@ func main() {
 		productRoutes := v1.Group("/products")
 		{
 			productRoutes.GET("/", controllers.GetProducts)
-			productRoutes.POST("/", controllers.InsertProduct)
+			productRoutes.POST("/", middleware.Authorization(""), controllers.InsertProduct)
 
 			productRoutes.GET("/id/:id", controllers.GetProductById)
 			productRoutes.PUT("/id/:id", controllers.EditProductById)
