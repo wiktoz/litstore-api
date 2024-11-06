@@ -5,8 +5,8 @@ import "gorm.io/gorm"
 type Delivery struct {
 	gorm.Model
 	Name            string  `gorm:"size:60;not null" json:"name"`
-	Description     string  `gorm:"type:text" json:"description"`
-	Img             string  `gorm:"size:150;not null" json:"img"`
+	Description     string  `gorm:"size:150" json:"description"`
+	ImgURL          string  `gorm:"size:150;not null" json:"img"`
 	Price           float64 `gorm:"type:numeric(6,2);not null" json:"price"`
 	FreeFrom        float64 `gorm:"type:numeric(6,2);not null" json:"free_from"`
 	PersonalCollect bool    `gorm:"default:false;not null" json:"personal_collect"`

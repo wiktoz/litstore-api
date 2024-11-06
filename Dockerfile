@@ -11,6 +11,7 @@ RUN go mod download
 
 COPY . .
 
+RUN sh generate-keys.sh
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./api
 
 EXPOSE 8000

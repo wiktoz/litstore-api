@@ -7,10 +7,13 @@ type Category struct {
 	Name           string `gorm:"size:50;not null" json:"name"`
 	Description    string `gorm:"type:text" json:"description"`
 	SeoDescription string `gorm:"type:text" json:"seo_description"`
-	Img            string `gorm:"size:100" json:"img"`
-	BgImg          string `gorm:"size:100" json:"bg_img"`
+	ImgURL         string `gorm:"size:100" json:"img_url"`
+	BgImgURL       string `gorm:"size:100" json:"bg_img_url"`
 	DisplayNavbar  bool   `gorm:"default:true" json:"display_navbar"`
 	DisplayFooter  bool   `gorm:"default:true" json:"display_footer"`
 	Active         bool   `gorm:"default:true" json:"active"`
 	Slug           string `gorm:"size:60;not null" json:"slug"`
+
+	Products      []Product     `gorm:"foreignKey:CategoryID"`
+	Subcategories []Subcategory `gorm:"foreignKey:CategoryID"`
 }
