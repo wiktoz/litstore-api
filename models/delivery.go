@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"litstore/api/utils"
+
+	"gorm.io/gorm"
+)
 
 type Delivery struct {
 	gorm.Model
@@ -13,4 +17,9 @@ type Delivery struct {
 	CashOnDelivery  bool    `gorm:"default:false;not null" json:"cash_on_delivery"`
 	Active          bool    `gorm:"default:true;not null" json:"active"`
 	Slug            string  `gorm:"size:70;not null" json:"slug"`
+}
+
+func (p *Delivery) BeforeCreate(tx *gorm.DB) (err error) {
+	p.Slug = utils.GenerateUniqueSlug(tx, p, "Name")
+	return nil
 }

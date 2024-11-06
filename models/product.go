@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"litstore/api/utils"
+
+	"gorm.io/gorm"
+)
 
 type Product struct {
 	gorm.Model
@@ -18,4 +22,9 @@ type Product struct {
 	Category      Category    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	SubcategoryID uint        `json:"subcategory_id"`
 	Subcategory   Subcategory `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+}
+
+func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
+	p.Slug = utils.GenerateUniqueSlug(tx, p, "Name")
+	return nil
 }
