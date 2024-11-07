@@ -38,9 +38,14 @@ func GetProductsBySearch(c *gin.Context) {
 }
 
 func InsertProduct(c *gin.Context) {
-	var body models.Product
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "You have access!",
+	})
 
-	c.Bind(&body)
+	//var body models.Product
 
-	initializers.DB.Create(&body)
+	//c.Bind(&body)
+
+	//initializers.DB.Create(&body)
 }

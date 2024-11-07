@@ -4,6 +4,7 @@ import (
 	"litstore/api/initializers"
 	"litstore/api/models"
 	"litstore/api/utils"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -53,10 +54,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Generate JWT token
-	token, err := utils.GenerateJWT(user.ID, "access")
+	// Generate JWT tokens
+	jwtAccessToken, errAccessToken := utils.GenerateJWT(user.ID, "access")
+	jwtRefreshToken, errRefreshToken := utils.GenerateJWT(user.ID, "refresh")
+	csrfToken, errCsrfToken := utils.GenerateCSRFToken()
 
-	if err != nil {
+	if errAccessToken != nil || errRefreshToken != nil || errCsrfToken != nil {
+		log.Fatalf(errAccessToken.Error())
+		log.Fatalf(errRefreshToken.Error())
+		log.Fatalf(errCsrfToken.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Internal error",
@@ -65,14 +72,34 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Set Tokens to Cookie
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "jwt_refresh_token",
+		Value:    jwtRefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(utils.JwtRefreshExp),
+	})
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "jwt_access_token",
-		Value:    token,
+		Value:    jwtAccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   int(utils.JwtAccessExp),
+	})
+
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "csrf_token",
+		Value:    csrfToken,
+		Path:     "/",
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(utils.CsrfExp),
 	})
 
 	c.JSON(http.StatusOK, gin.H{
