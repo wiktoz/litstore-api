@@ -1,11 +1,7 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type User struct {
-	gorm.Model
+	Base
 	Email       string       `gorm:"size:60;not null" json:"email"`
 	Password    string       `gorm:"size:64;not null" json:"password"`
 	Confirmed   bool         `gorm:"default:false" json:"confirmed"`

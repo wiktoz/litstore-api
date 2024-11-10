@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Address struct {
-	gorm.Model
+	Base
 	UserID     uint   `gorm:"not null" json:"user_id"`
 	Name       string `gorm:"size:60;not null" json:"name"`
 	Surname    string `gorm:"size:60;not null" json:"surname"`

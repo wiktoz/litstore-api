@@ -2,12 +2,10 @@ package models
 
 import (
 	"litstore/api/models/enums"
-
-	"gorm.io/gorm"
 )
 
 type Item struct {
-	gorm.Model
+	Base
 	Price      float64    `gorm:"type:numeric(6,2);not null" json:"price"`
 	PromoPrice float64    `gorm:"type:numeric(6,2);default:null" json:"promo_price"`
 	Stock      uint       `gorm:"not null" json:"stock"`

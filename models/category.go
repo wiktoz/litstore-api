@@ -7,7 +7,7 @@ import (
 )
 
 type Category struct {
-	gorm.Model
+	Base
 	Name           string `gorm:"size:50;not null" json:"name"`
 	Description    string `gorm:"type:text" json:"description"`
 	SeoDescription string `gorm:"type:text" json:"seo_description"`

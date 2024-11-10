@@ -17,12 +17,22 @@ func GetProducts(c *gin.Context) {
 }
 
 func GetProductById(c *gin.Context) {
-	name := c.Param("name")
+	id := c.Param("id")
 
-	var product = models.Product{Name: name}
+	var product models.Product
 
-	initializers.DB.Find(&product)
-	c.IndentedJSON(http.StatusOK, product)
+	result := initializers.DB.Where("id = ?", id).Find(&product)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "Cannot find product",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
 }
 
 func EditProductById(c *gin.Context) {
@@ -38,14 +48,25 @@ func GetProductsBySearch(c *gin.Context) {
 }
 
 func InsertProduct(c *gin.Context) {
+	var body models.Product
+
+	c.Bind(&body)
+
+	result := initializers.DB.Create(&body)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "Cannot create product",
+			"err":     result.Error,
+		})
+
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "You have access!",
+		"message": "Successfully created product",
+		"product": body.ID,
 	})
-
-	//var body models.Product
-
-	//c.Bind(&body)
-
-	//initializers.DB.Create(&body)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type Subcategory struct {
-	gorm.Model
+	Base
 	Name           string `gorm:"size:50;not null" json:"name"`
 	Description    string `gorm:"type:text" json:"description"`
 	SeoDescription string `gorm:"type:text" json:"seo_description"`
@@ -20,6 +20,8 @@ type Subcategory struct {
 
 	CategoryID uint     `gorm:"not null" json:"category_id"`
 	Category   Category `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+
+	Products []Product `gorm:"foreignKey:SubcategoryID"`
 }
 
 func (p *Subcategory) BeforeCreate(tx *gorm.DB) (err error) {

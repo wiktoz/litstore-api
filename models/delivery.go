@@ -7,7 +7,7 @@ import (
 )
 
 type Delivery struct {
-	gorm.Model
+	Base
 	Name            string  `gorm:"size:60;not null" json:"name"`
 	Description     string  `gorm:"size:150" json:"description"`
 	ImgURL          string  `gorm:"size:150;not null" json:"img"`

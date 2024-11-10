@@ -2,14 +2,11 @@ package initializers
 
 import (
 	"litstore/api/models"
+	"litstore/api/seed"
 	"log"
 )
 
 func SyncDatabase() {
-	DB.Exec("CREATE TYPE lang_type AS ENUM ('pl', 'en', 'fr', 'de');")
-	DB.Exec("CREATE TYPE select_type AS ENUM ('button', 'select');")
-	DB.Exec("CREATE TYPE unit_type AS ENUM ('pc.', 'l', 'kg', 'set');")
-
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.Address{},
@@ -31,4 +28,8 @@ func SyncDatabase() {
 	}
 
 	log.Println("Database migration complete!")
+
+	seed.SeedDefaultPermissions(DB)
+
+	log.Println("Permission seed complete!")
 }

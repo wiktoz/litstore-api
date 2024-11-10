@@ -8,7 +8,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -55,7 +54,7 @@ func readECPublicKey(filename string) (*ecdsa.PublicKey, error) {
 	return publicKey, nil
 }
 
-func GenerateJWT(userID uint, tokenType string) (string, error) {
+func GenerateJWT(userID string, tokenType string) (string, error) {
 	privateKey, err := readECPrivateKey(JwtKeyPath)
 
 	if err != nil {
@@ -73,7 +72,7 @@ func GenerateJWT(userID uint, tokenType string) (string, error) {
 	}
 
 	claims := jwt.MapClaims{
-		"sub": strconv.FormatUint(uint64(userID), 10),
+		"sub": userID,
 		"jti": uuid.New().String(),
 		"exp": time.Now().Add(duration).Unix(),
 	}

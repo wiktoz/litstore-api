@@ -1,6 +1,7 @@
 package main
 
 import (
+	"litstore/api/config"
 	"litstore/api/controllers"
 	"litstore/api/initializers"
 	"litstore/api/middleware"
@@ -23,7 +24,7 @@ func main() {
 		productRoutes := v1.Group("/products")
 		{
 			productRoutes.GET("/", controllers.GetProducts)
-			productRoutes.POST("/", middleware.Authorization(""), controllers.InsertProduct)
+			productRoutes.POST("/", middleware.Authorization(config.CreateProduct), controllers.InsertProduct)
 
 			productRoutes.GET("/id/:id", controllers.GetProductById)
 			productRoutes.PUT("/id/:id", controllers.EditProductById)
@@ -36,6 +37,12 @@ func main() {
 		{
 			authRoutes.POST("/login", controllers.Login)
 			authRoutes.POST("/register", controllers.Register)
+		}
+
+		variantRoutes := v1.Group("/variants")
+		{
+			variantRoutes.GET("/")
+			variantRoutes.POST("/")
 		}
 	}
 
