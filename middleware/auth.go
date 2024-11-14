@@ -37,7 +37,7 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		tokenString, err := c.Cookie("jwt_access_token")
 
 		if err != nil {
-			c.JSON(401, gin.H{"error": "No token passed", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "No token passed", "success": false})
 			c.Abort()
 			return
 		}
@@ -45,7 +45,7 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		token, err := utils.ParseJWT(tokenString)
 
 		if err != nil {
-			c.JSON(401, gin.H{"error": "Invalid token", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
 			c.Abort()
 			return
 		}
@@ -53,7 +53,22 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		userID, err := token.Claims.GetSubject()
 
 		if err != nil {
-			c.JSON(401, gin.H{"error": "Invalid token", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
+			c.Abort()
+			return
+		}
+
+		// check if token is not revoked
+		blacklisted, err := utils.IsBlacklisted(c, initializers.RDB, tokenString)
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Cannot connect to redis", "success": false})
+			c.Abort()
+			return
+		}
+
+		if blacklisted {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
 			c.Abort()
 			return
 		}
@@ -61,16 +76,27 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		// check for permissions by userID
 		var count int
 
-		// Perform a join query to count how many times the permission exists for the user
-		result := initializers.DB.Table("users").
-			Select("count(*)").
-			Joins("JOIN user_permissions ON user_permissions.user_id = users.id").
-			Joins("JOIN permissions ON permissions.id = user_permissions.permission_id").
-			Where("users.id = ? AND permissions.name = ?", userID, requiredPermission).
-			Group("users.id").
-			Scan(&count)
+		query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM user_permissions
+			JOIN permissions ON user_permissions.permission_id = permissions.id
+			WHERE user_permissions.user_id = (SELECT id FROM users WHERE username = 'john_doe') 
+			AND permissions.name = 'product_read'
+		)
+		OR EXISTS (
+			SELECT 1
+			FROM user_roles
+			JOIN roles ON user_roles.role_id = roles.id
+			JOIN role_permissions ON role_permissions.role_id = roles.id
+			JOIN permissions ON permissions.id = role_permissions.permission_id
+			WHERE user_roles.user_id = (SELECT id FROM users WHERE username = 'john_doe') 
+			AND permissions.name = 'product_read'
+		);`
 
-		if result.Error != nil || count <= 0 {
+		result := initializers.DB.Raw(query, userID, requiredPermission, userID, requiredPermission).Scan(&count)
+
+		if result.Error != nil || count == 0 {
 			c.JSON(401, gin.H{"error": "Insufficient permissions", "success": false})
 			c.Abort()
 			return

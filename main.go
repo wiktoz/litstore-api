@@ -13,6 +13,7 @@ func init() {
 	initializers.LoadEnv()
 	initializers.ConnectDB()
 	initializers.SyncDatabase()
+	initializers.InitRedis()
 }
 
 func main() {
@@ -23,26 +24,48 @@ func main() {
 	{
 		productRoutes := v1.Group("/products")
 		{
-			productRoutes.GET("/", controllers.GetProducts)
-			productRoutes.POST("/", middleware.Authorization(config.CreateProduct), controllers.InsertProduct)
-
-			productRoutes.GET("/id/:id", controllers.GetProductById)
-			productRoutes.PUT("/id/:id", controllers.EditProductById)
-			productRoutes.DELETE("/id/:id", controllers.DeleteProductById)
-
-			productRoutes.GET("/search/:phrase", controllers.GetProductsBySearch)
+			productRoutes.GET("/", controllers.GetProducts)                                                                // GET all products
+			productRoutes.POST("/", middleware.Authorization(config.CreateProduct), controllers.InsertProduct)             // CREATE a new product
+			productRoutes.GET("/id/:id", controllers.GetProductById)                                                       // GET product by id
+			productRoutes.PUT("/id/:id", middleware.Authorization(config.EditProduct), controllers.EditProductById)        // EDIT the product
+			productRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteProduct), controllers.DeleteProductById) // DELETE the product
+			productRoutes.GET("/search/:phrase", controllers.GetProductsBySearch)                                          // SEARCH for product
 		}
 
 		authRoutes := v1.Group("/auth")
 		{
-			authRoutes.POST("/login", controllers.Login)
-			authRoutes.POST("/register", controllers.Register)
+			authRoutes.POST("/login", controllers.Login)       // LOGIN
+			authRoutes.POST("/register", controllers.Register) // REGISTER
+			authRoutes.POST("/revoke/access_token")            // REVOKE access token
+			authRoutes.POST("/revoke/refresh_token")           // REVOKE refresh token
+			authRoutes.POST("/logout")                         // LOGOUT
 		}
 
 		variantRoutes := v1.Group("/variants")
 		{
-			variantRoutes.GET("/")
-			variantRoutes.POST("/")
+			variantRoutes.GET("/", middleware.Authorization(config.ReadVariant))
+			variantRoutes.POST("/", middleware.Authorization(config.CreateVariant))
+			variantRoutes.GET("/id/:id", middleware.Authorization(config.ReadVariant))
+			variantRoutes.PUT("/id/:id", middleware.Authorization(config.EditVariant))
+			variantRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteVariant))
+		}
+
+		categoryRoutes := v1.Group("/categories")
+		{
+			categoryRoutes.GET("/")
+			categoryRoutes.POST("/", middleware.Authorization(config.CreateCategory))
+			categoryRoutes.GET("/id/:id")
+			categoryRoutes.PUT("/id/:id", middleware.Authorization(config.EditCategory))
+			categoryRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteCategory))
+		}
+
+		subcategoryRoutes := v1.Group("/subcategories")
+		{
+			subcategoryRoutes.GET("")
+			subcategoryRoutes.POST("/", middleware.Authorization(config.CreateSubcategory))
+			subcategoryRoutes.GET("/id/:id")
+			subcategoryRoutes.PUT("/id/:id", middleware.Authorization(config.EditSubcategory))
+			subcategoryRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteSubcategory))
 		}
 	}
 

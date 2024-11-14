@@ -20,3 +20,31 @@ const (
 	EditUser   Permission = "user_edit"
 	DeleteUser Permission = "user_delete"
 )
+
+/*
+Variant Permissions
+*/
+const (
+	ReadVariant   Permission = "variant_read"
+	CreateVariant Permission = "variant_create"
+	EditVariant   Permission = "variant_edit"
+	DeleteVariant Permission = "variant_delete"
+)
+
+/*
+Category Permissions
+*/
+const (
+	CreateCategory Permission = "category_create"
+	EditCategory   Permission = "category_edit"
+	DeleteCategory Permission = "category_delete"
+)
+
+/*
+Subcategory Permissions
+*/
+const (
+	CreateSubcategory Permission = "subcategory_create"
+	EditSubcategory   Permission = "subcategory_edit"
+	DeleteSubcategory Permission = "subcategory_delete"
+)

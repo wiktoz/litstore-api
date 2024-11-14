@@ -7,20 +7,21 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"litstore/api/config"
 	"os"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
-const (
-	JwtKeyPath       string        = "/app/keys/ec.pem"
-	JwtPublicKeyPath string        = "/app/keys/ec-pub.pem"
-	JwtAccessExp     time.Duration = time.Minute * 15   // 15 minutes
-	JwtRefreshExp    time.Duration = time.Hour * 24 * 7 // 1 week
-	CsrfExp          time.Duration = time.Minute * 15   // 15 minutes
-)
+type Token struct {
+	Name    string
+	Value   string
+	ExpTime time.Duration
+}
 
 func readECPrivateKey(filename string) (*ecdsa.PrivateKey, error) {
 	keyData, err := os.ReadFile(filename)
@@ -55,7 +56,7 @@ func readECPublicKey(filename string) (*ecdsa.PublicKey, error) {
 }
 
 func GenerateJWT(userID string, tokenType string) (string, error) {
-	privateKey, err := readECPrivateKey(JwtKeyPath)
+	privateKey, err := readECPrivateKey(config.JwtPrivateKeyPath)
 
 	if err != nil {
 		return "", err
@@ -64,9 +65,9 @@ func GenerateJWT(userID string, tokenType string) (string, error) {
 	var duration time.Duration
 
 	if tokenType == "access" {
-		duration = JwtAccessExp
+		duration = config.JwtAccessExpTime
 	} else if tokenType == "refresh" {
-		duration = JwtRefreshExp
+		duration = config.JwtRefreshExpTime
 	} else {
 		return "", fmt.Errorf("incorect tokenType")
 	}
@@ -83,7 +84,7 @@ func GenerateJWT(userID string, tokenType string) (string, error) {
 }
 
 func ParseJWT(tokenString string) (*jwt.Token, error) {
-	publicKey, err := readECPublicKey(JwtPublicKeyPath)
+	publicKey, err := readECPublicKey(config.JwtPublicKeyPath)
 
 	if err != nil {
 		return nil, err
@@ -108,7 +109,7 @@ func ParseJWT(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func GenerateCSRFToken() (string, error) {
+func GenerateToken() (string, error) {
 	bytes := make([]byte, 32)
 	_, err := rand.Read(bytes)
 
@@ -117,4 +118,40 @@ func GenerateCSRFToken() (string, error) {
 	}
 
 	return hex.EncodeToString(bytes), nil
+}
+
+func IsBlacklisted(c *gin.Context, rds *redis.Client, token string) (bool, error) {
+	result, err := rds.Get(c, token).Result()
+
+	if err == redis.Nil {
+		return false, nil
+	} else if err != nil {
+		return true, err
+	}
+
+	if result == "revoked" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func RevokeToken(c *gin.Context, rds *redis.Client, token Token) error {
+	var err error
+
+	token.Value, err = c.Cookie(token.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = rds.Set(c, token.Value, "revoked", token.ExpTime).Err()
+
+	if err != nil {
+		return err
+	}
+
+	c.SetCookie(token.Name, "", -1, "/", "localhost", true, true)
+
+	return nil
 }

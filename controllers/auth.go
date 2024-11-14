@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"litstore/api/config"
 	"litstore/api/initializers"
 	"litstore/api/models"
 	"litstore/api/utils"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -57,13 +57,9 @@ func Login(c *gin.Context) {
 	// Generate JWT tokens
 	jwtAccessToken, errAccessToken := utils.GenerateJWT(user.ID, "access")
 	jwtRefreshToken, errRefreshToken := utils.GenerateJWT(user.ID, "refresh")
-	csrfToken, errCsrfToken := utils.GenerateCSRFToken()
+	csrfToken, errCsrfToken := utils.GenerateToken()
 
 	if errAccessToken != nil || errRefreshToken != nil || errCsrfToken != nil {
-		log.Fatalf(errAccessToken.Error())
-		log.Fatalf(errRefreshToken.Error())
-		log.Fatalf(errCsrfToken.Error())
-
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"message": "Internal error",
@@ -74,32 +70,32 @@ func Login(c *gin.Context) {
 
 	// Set Tokens to Cookie
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "jwt_refresh_token",
+		Name:     config.JwtRefreshName,
 		Value:    jwtRefreshToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(utils.JwtRefreshExp),
+		MaxAge:   int(config.JwtRefreshExpTime),
 	})
 
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "jwt_access_token",
+		Name:     config.JwtAccessName,
 		Value:    jwtAccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(utils.JwtAccessExp),
+		MaxAge:   int(config.JwtAccessExpTime),
 	})
 
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "csrf_token",
+		Name:     config.CsrfName,
 		Value:    csrfToken,
 		Path:     "/",
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   int(utils.CsrfExp),
+		MaxAge:   int(config.CsrfExpTime),
 	})
 
 	c.JSON(http.StatusOK, gin.H{
@@ -168,5 +164,37 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Successfully registered",
+	})
+}
+
+func Logout(c *gin.Context) {
+	// Revoking refresh token
+	refreshToken := utils.Token{Name: config.JwtRefreshName, ExpTime: config.JwtRefreshExpTime}
+
+	err := utils.RevokeToken(c, initializers.RDB, refreshToken)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Cannot logout at this moment",
+		})
+	}
+
+	// Revoking access token
+	accessToken := utils.Token{Name: config.JwtAccessName, ExpTime: config.JwtAccessExpTime}
+
+	err = utils.RevokeToken(c, initializers.RDB, accessToken)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Cannot logout at this moment",
+		})
+	}
+
+	// Success
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Logged out",
 	})
 }
