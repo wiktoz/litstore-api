@@ -68,7 +68,7 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		}
 
 		if blacklisted {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Blacklisted token", "success": false})
 			c.Abort()
 			return
 		}

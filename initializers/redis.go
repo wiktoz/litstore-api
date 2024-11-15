@@ -8,6 +8,6 @@ var RDB *redis.Client
 
 func InitRedis() {
 	RDB = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: "litstore_redis:6379",
 	})
 }

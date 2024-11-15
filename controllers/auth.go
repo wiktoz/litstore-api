@@ -106,8 +106,8 @@ func Login(c *gin.Context) {
 
 func Register(c *gin.Context) {
 	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
 	}
 
 	// No data sent
@@ -177,7 +177,9 @@ func Logout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"message": "Cannot logout at this moment",
+			"err":     err,
 		})
+		return
 	}
 
 	// Revoking access token
@@ -189,7 +191,9 @@ func Logout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"message": "Cannot logout at this moment",
+			"err":     err,
 		})
+		return
 	}
 
 	// Success

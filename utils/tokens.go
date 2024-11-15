@@ -142,7 +142,7 @@ func RevokeToken(c *gin.Context, rds *redis.Client, token Token) error {
 	token.Value, err = c.Cookie(token.Name)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("you are not logged in")
 	}
 
 	err = rds.Set(c, token.Value, "revoked", token.ExpTime).Err()

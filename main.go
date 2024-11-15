@@ -36,9 +36,7 @@ func main() {
 		{
 			authRoutes.POST("/login", controllers.Login)       // LOGIN
 			authRoutes.POST("/register", controllers.Register) // REGISTER
-			authRoutes.POST("/revoke/access_token")            // REVOKE access token
-			authRoutes.POST("/revoke/refresh_token")           // REVOKE refresh token
-			authRoutes.POST("/logout")                         // LOGOUT
+			authRoutes.POST("/logout", controllers.Logout)     // LOGOUT
 		}
 
 		variantRoutes := v1.Group("/variants")
