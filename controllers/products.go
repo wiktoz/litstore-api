@@ -35,6 +35,25 @@ func GetProductById(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+func GetProductBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+
+	var product models.Product
+
+	result := initializers.DB.Where("slug = ?", slug).Find(&product)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "Cannot find product",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
+
 func EditProductById(c *gin.Context) {
 
 }
