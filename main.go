@@ -6,6 +6,7 @@ import (
 	"litstore/api/initializers"
 	"litstore/api/middleware"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,15 @@ func init() {
 func main() {
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
+
+	// Custom CORS configuration
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"}, // Allow your frontend's origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"}, // Add necessary headers
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	v1 := r.Group("/api/v1")
 	{
