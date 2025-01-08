@@ -9,6 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
+/*
+	Fill default permissions on startup
+*/
 func SeedDefaultPermissions(db *gorm.DB) {
 	defaultPermissions := []config.Permission{
 		config.ReadProduct,
