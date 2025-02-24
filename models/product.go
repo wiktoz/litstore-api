@@ -8,8 +8,8 @@ import (
 
 type Product struct {
 	Base
-	Name         string               `json:"name"`
-	Manufacturer string               `json:"manufacturer"`
+	Name         string               `json:"name" binding:"required,min=3"`
+	Manufacturer string               `json:"manufacturer" binding:"required,min=3"`
 	New          bool                 `json:"new"`
 	Active       bool                 `json:"active"`
 	Slug         string               `json:"slug"`

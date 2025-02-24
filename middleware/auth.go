@@ -20,7 +20,7 @@ func CSRF() gin.HandlerFunc {
 
 		if _, ok := writeMethods[c.Request.Method]; ok {
 			csrfToken := c.GetHeader("X-CSRF-Token")
-			cookieCsrfToken, err := c.Cookie("csrf-token")
+			cookieCsrfToken, err := c.Cookie(config.CsrfName)
 
 			if err != nil || csrfToken != cookieCsrfToken {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "CSRF token mismatch or missing"})
@@ -34,7 +34,7 @@ func CSRF() gin.HandlerFunc {
 
 func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString, err := c.Cookie("jwt_access_token")
+		tokenString, err := c.Cookie(config.JwtAccessName)
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "No token passed", "success": false})
@@ -74,32 +74,35 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		}
 
 		// check for permissions by userID
-		var count int
 
-		query := `
-		SELECT EXISTS (
-			SELECT 1
-			FROM user_permissions
-			JOIN permissions ON user_permissions.permission_id = permissions.id
-			WHERE user_permissions.user_id = (SELECT id FROM users WHERE username = 'john_doe') 
-			AND permissions.name = 'product_read'
-		)
-		OR EXISTS (
-			SELECT 1
-			FROM user_roles
-			JOIN roles ON user_roles.role_id = roles.id
-			JOIN role_permissions ON role_permissions.role_id = roles.id
-			JOIN permissions ON permissions.id = role_permissions.permission_id
-			WHERE user_roles.user_id = (SELECT id FROM users WHERE username = 'john_doe') 
-			AND permissions.name = 'product_read'
-		);`
+		if requiredPermission != "" {
+			var exists bool
 
-		result := initializers.DB.Raw(query, userID, requiredPermission, userID, requiredPermission).Scan(&count)
+			query := `
+			SELECT EXISTS (
+				SELECT 1
+				FROM users_permissions
+				JOIN permissions ON users_permissions.permission_id = permissions.id
+				WHERE users_permissions.user_id = ?
+				AND permissions.name = ?
+			)
+			OR EXISTS (
+				SELECT 1
+				FROM users_roles
+				JOIN roles ON users_roles.role_id = roles.id
+				JOIN roles_permissions ON roles_permissions.role_id = roles.id
+				JOIN permissions ON permissions.id = roles_permissions.permission_id
+				WHERE users_roles.user_id = ?
+				AND permissions.name = ?
+			);`
 
-		if result.Error != nil || count == 0 {
-			c.JSON(401, gin.H{"error": "Insufficient permissions", "success": false})
-			c.Abort()
-			return
+			result := initializers.DB.Raw(query, userID, requiredPermission, userID, requiredPermission).Scan(&exists)
+
+			if result.Error != nil || !exists {
+				c.JSON(401, gin.H{"error": "Insufficient permissions", "success": false})
+				c.Abort()
+				return
+			}
 		}
 
 		c.Next()

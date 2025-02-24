@@ -30,6 +30,11 @@ func SyncDatabase() {
 	log.Println("Database migration complete!")
 
 	seed.SeedDefaultPermissions(DB)
-
 	log.Println("Permission seed complete!")
+
+	seed.SeedDefaultRoles(DB)
+	log.Println("Role seed complete!")
+
+	seed.SeedDefaultUsers(DB)
+	log.Println("User seed complete!")
 }

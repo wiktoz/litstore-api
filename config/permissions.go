@@ -48,3 +48,11 @@ const (
 	EditSubcategory   Permission = "subcategory_edit"
 	DeleteSubcategory Permission = "subcategory_delete"
 )
+
+var AllPermissions = []Permission{
+	ReadProduct, CreateProduct, EditProduct, DeleteProduct,
+	ReadUser, EditUser, DeleteUser,
+	ReadVariant, CreateVariant, EditVariant, DeleteVariant,
+	CreateCategory, EditCategory, DeleteCategory,
+	CreateSubcategory, EditSubcategory, DeleteSubcategory,
+}
