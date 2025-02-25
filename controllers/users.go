@@ -6,6 +6,7 @@ import (
 	"litstore/api/models"
 	"litstore/api/utils"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,11 +57,41 @@ func GetUsers(c *gin.Context) {
 }
 
 func GetUserById(c *gin.Context) {
+	id := c.Param("id")
 
+	var user models.User
+
+	result := initializers.DB.Preload("Roles.Permissions").Preload("Permissions").Preload("Addresses").Where("ID = ?", id).First(&user)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "User not found",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func GetUsersBySearch(c *gin.Context) {
+	phrase := c.Param("phrase")
 
+	var user models.User
+
+	result := initializers.DB.Where("Email LIKE ?", "%"+strings.ToLower(phrase)+"%").First(&user)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "User not found",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func EditUserById(c *gin.Context) {
