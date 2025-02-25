@@ -3,6 +3,7 @@ package middleware
 import (
 	"litstore/api/config"
 	"litstore/api/initializers"
+	"litstore/api/models"
 	"litstore/api/utils"
 	"net/http"
 
@@ -62,13 +63,58 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 		blacklisted, err := utils.IsBlacklisted(c, initializers.RDB, tokenString)
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Cannot connect to redis", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"error":   "Cannot connect to redis",
+			})
+
 			c.Abort()
 			return
 		}
 
 		if blacklisted {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Blacklisted token", "success": false})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"error":   "Blacklisted token",
+			})
+
+			c.Abort()
+			return
+		}
+
+		// Get user details
+		var user models.User
+
+		result := initializers.DB.Where("ID = ?", userID).First(&user)
+
+		if result.Error != nil {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"error":   "Cannot fetch user",
+			})
+
+			c.Abort()
+			return
+		}
+
+		// check if user is blocked
+		if user.Blocked {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"error":   "User is blocked by administrator",
+			})
+
+			c.Abort()
+			return
+		}
+
+		// check if user has confirmed email
+		if !user.Confirmed {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"error":   "User has not confirmed an email",
+			})
+
 			c.Abort()
 			return
 		}

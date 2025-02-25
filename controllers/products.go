@@ -20,6 +20,15 @@ func GetProducts(c *gin.Context) {
 func GetProductById(c *gin.Context) {
 	id := c.Param("id")
 
+	// Validate the ID format (e.g., UUID with 36 characters)
+	if len(id) != 36 || !utils.ValidateUUID(id) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid product ID format!",
+		})
+		return
+	}
+
 	var product models.Product
 
 	result := initializers.DB.Where("id = ?", id).Find(&product)
@@ -56,7 +65,16 @@ func GetProductBySlug(c *gin.Context) {
 }
 
 func EditProductById(c *gin.Context) {
+	id := c.Param("id")
 
+	// Validate the ID format (e.g., UUID with 36 characters)
+	if len(id) != 36 || !utils.ValidateUUID(id) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid product ID format!",
+		})
+		return
+	}
 }
 
 func DeleteProductById(c *gin.Context) {
