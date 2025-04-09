@@ -8,6 +8,11 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "litstore/api/docs"
 )
 
 func init() {
@@ -16,6 +21,12 @@ func init() {
 	initializers.SyncDatabase()
 	initializers.InitRedis()
 }
+
+// @title       Litstore WebAPI
+// @version     1.0
+// @description E-commerce system API Docs
+// @host        localhost:8000
+// @BasePath    /api/v1
 
 func main() {
 	r := gin.Default()
@@ -30,6 +41,10 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// Swagger Docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// API Routes
 	v1 := r.Group("/api/v1")
 	{
 		productRoutes := v1.Group("/products")

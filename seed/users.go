@@ -26,8 +26,6 @@ func SeedDefaultRoles(db *gorm.DB) {
 }
 
 func SeedDefaultUsers(db *gorm.DB) {
-	// Add admin user
-
 	// Get Admin Role
 	var adminRole models.Role
 	result := db.Where("name = ?", "admin").First(&adminRole)

@@ -5,6 +5,7 @@ import (
 	"litstore/api/models"
 	"litstore/api/utils"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -107,7 +108,22 @@ func DeleteProductById(c *gin.Context) {
 }
 
 func GetProductsBySearch(c *gin.Context) {
+	phrase := c.Param("phrase")
 
+	var product models.Product
+
+	result := initializers.DB.Where("Email LIKE ?", "%"+strings.ToLower(phrase)+"%").Find(&product)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "Product not found",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
 }
 
 func InsertProduct(c *gin.Context) {
@@ -138,6 +154,6 @@ func InsertProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Successfully created product",
-		"product": body.ID,
+		"product": result,
 	})
 }

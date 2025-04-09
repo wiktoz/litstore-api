@@ -8,8 +8,8 @@ import (
 
 type Category struct {
 	Base
-	Name           string `gorm:"size:50;not null" json:"name"`
-	Description    string `gorm:"type:text" json:"description"`
+	Name           string `gorm:"size:50;not null" json:"name" binding:"required,min=3"`
+	Description    string `gorm:"type:text" json:"description" binding:"required,min=3"`
 	SeoDescription string `gorm:"type:text" json:"seo_description"`
 	ImgURL         string `gorm:"size:100" json:"img_url"`
 	BgImgURL       string `gorm:"size:100" json:"bg_img_url"`
