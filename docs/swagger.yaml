@@ -120,6 +120,34 @@ paths:
       tags:
       - user
   /users/id/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Finds user by ID and deletes
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Deletes user
+      tags:
+      - user
     get:
       consumes:
       - application/json
@@ -129,7 +157,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -146,6 +174,38 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Get User by ID
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Finds user by ID and updates with values provided in body
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Updates user data
       tags:
       - user
   /users/me:
