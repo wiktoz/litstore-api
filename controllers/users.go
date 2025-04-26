@@ -90,7 +90,7 @@ func GetUsers(c *gin.Context) {
 // @Summary      Get User by ID
 // @Description  Get User by their ID
 // @Tags         user
-// @Param id path int true "User ID"
+// @Param id path string true "User ID"
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.User
@@ -140,10 +140,68 @@ func GetUsersBySearch(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// EditUserById godoc
+// @Summary      Updates user data
+// @Description  Finds user by ID and updates with values provided in body
+// @Tags         user
+// @Param id path string true "User ID"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.User
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Failure      500  {object}  models.Error
+// @Router       /users/id/{id} [put]
 func EditUserById(c *gin.Context) {
+	id := c.Param("id")
 
+	var body models.User
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.Error{Message: "Invalid body data"})
+		return
+	}
+
+	var user models.User
+
+	findUser := initializers.DB.Where("ID = ?", id).First(&user)
+
+	if findUser.Error != nil {
+		c.JSON(http.StatusNotFound, models.Error{Message: "User not found"})
+		return
+	}
+
+	result := initializers.DB.Model(&user).Updates(&body)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, models.Error{Message: "Cannot update user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
+// DeleteUserById godoc
+// @Summary      Deletes user
+// @Description  Finds user by ID and deletes
+// @Tags         user
+// @Param id path string true "User ID"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.Error
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Router       /users/id/{id} [delete]
 func DeleteUserById(c *gin.Context) {
+	id := c.Param("id")
 
+	// Perform the delete operation
+	result := initializers.DB.Where("ID = ?", id).Delete(&models.User{})
+
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, models.Error{Message: "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Error{Message: "User deleted"})
 }
