@@ -57,7 +57,7 @@ func GetUserSelf(c *gin.Context) {
 
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, models.Error{Message: "User not found"})
-
+		c.Abort()
 		return
 	}
 

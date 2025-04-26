@@ -45,14 +45,43 @@ func EditCategoryById(c *gin.Context) {
 }
 
 func GetCategories(c *gin.Context) {
+	var categories []models.Category
 
+	result := initializers.DB.Find(&categories)
+
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, models.Error{Message: "Categories not found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, categories)
 }
 
 func GetCategoryById(c *gin.Context) {
+	var category models.Category
 
+	result := initializers.DB.Where("ID = ?", c.Param("id")).First(&category)
+
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, models.Error{Message: "Category not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, category)
 }
 
 func GetCategoryBySlug(c *gin.Context) {
+	var category models.Category
+
+	result := initializers.DB.Where("slug = ?", c.Param("slug")).First(&category)
+
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, models.Error{Message: "Category not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, category)
 
 }
 

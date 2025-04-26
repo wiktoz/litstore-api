@@ -34,9 +34,9 @@ func main() {
 
 	// Custom CORS configuration
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // Allow your frontend's origin
+		AllowOrigins:     []string{"http://localhost:3000"}, // Replace with your frontend's origin
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"}, // Add necessary headers
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-CSRF-Token"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
@@ -49,8 +49,8 @@ func main() {
 	{
 		productRoutes := v1.Group("/products")
 		{
-			productRoutes.GET("/", controllers.GetProducts)                                                                // GET all products
-			productRoutes.POST("/", middleware.Authorization(config.CreateProduct), controllers.InsertProduct)             // CREATE a new product
+			productRoutes.GET("/all", controllers.GetProducts)                                                             // GET all products
+			productRoutes.POST("/new", middleware.Authorization(config.CreateProduct), controllers.InsertProduct)          // CREATE a new product
 			productRoutes.GET("/id/:id", controllers.GetProductById)                                                       // GET product by id
 			productRoutes.GET("/slug/:slug", controllers.GetProductBySlug)                                                 // GET product by slug
 			productRoutes.PUT("/id/:id", middleware.Authorization(config.EditProduct), controllers.EditProductById)        // EDIT the product
@@ -69,8 +69,8 @@ func main() {
 
 		variantRoutes := v1.Group("/variants")
 		{
-			variantRoutes.GET("/", middleware.Authorization(config.ReadVariant), controllers.GetVariants)
-			variantRoutes.POST("/", middleware.Authorization(config.CreateVariant), controllers.InsertVariant)
+			variantRoutes.GET("/all", middleware.Authorization(config.ReadVariant), controllers.GetVariants)
+			variantRoutes.POST("/new", middleware.Authorization(config.CreateVariant), controllers.InsertVariant)
 			variantRoutes.GET("/id/:id", middleware.Authorization(config.ReadVariant), controllers.GetVariantById)
 			variantRoutes.PUT("/id/:id", middleware.Authorization(config.EditVariant), controllers.EditVariantById)
 			variantRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteVariant), controllers.DeleteVariantById)
@@ -78,8 +78,8 @@ func main() {
 
 		categoryRoutes := v1.Group("/categories")
 		{
-			categoryRoutes.GET("/", controllers.GetCategories)
-			categoryRoutes.POST("/", middleware.Authorization(config.CreateCategory), controllers.InsertCategory)
+			categoryRoutes.GET("/all", controllers.GetCategories)
+			categoryRoutes.POST("/new", middleware.Authorization(config.CreateCategory), controllers.InsertCategory)
 			categoryRoutes.GET("/id/:id", controllers.GetCategoryById)
 			categoryRoutes.GET("/slug/:slug", controllers.GetCategoryBySlug)
 			categoryRoutes.PUT("/id/:id", middleware.Authorization(config.EditCategory), controllers.EditCategoryById)
@@ -88,8 +88,8 @@ func main() {
 
 		subcategoryRoutes := v1.Group("/subcategories")
 		{
-			subcategoryRoutes.GET("/", controllers.GetSubcategories)
-			subcategoryRoutes.POST("/", middleware.Authorization(config.CreateSubcategory), controllers.InsertSubcategory)
+			subcategoryRoutes.GET("/all", controllers.GetSubcategories)
+			subcategoryRoutes.POST("/new", middleware.Authorization(config.CreateSubcategory), controllers.InsertSubcategory)
 			subcategoryRoutes.GET("/id/:id", controllers.GetSubcategoryById)
 			subcategoryRoutes.GET("/slug/:slug", controllers.GetSubcategoryBySlug)
 			subcategoryRoutes.PUT("/id/:id", middleware.Authorization(config.EditSubcategory), controllers.EditSubcategoryById)
@@ -99,7 +99,7 @@ func main() {
 		userRoutes := v1.Group("/users")
 		{
 			userRoutes.GET("/me", middleware.Authorization(""), controllers.GetUserSelf)
-			userRoutes.GET("/", middleware.Authorization(config.ReadUser), controllers.GetUsers)
+			userRoutes.GET("/all", middleware.Authorization(config.ReadUser), controllers.GetUsers)
 			userRoutes.GET("/id/:id", middleware.Authorization(config.ReadUser), controllers.GetUserById)
 			userRoutes.GET("/search/:phrase", middleware.Authorization(config.ReadUser), controllers.GetUsersBySearch)
 			userRoutes.PUT("/id/:id", middleware.Authorization(config.EditUser), controllers.EditUserById)

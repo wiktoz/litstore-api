@@ -37,4 +37,7 @@ func SyncDatabase() {
 
 	seed.SeedDefaultUsers(DB)
 	log.Println("User seed complete!")
+
+	seed.SeedDefaultCategories(DB)
+	log.Println("Category seed complete!")
 }

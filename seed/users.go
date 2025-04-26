@@ -54,6 +54,24 @@ func SeedDefaultUsers(db *gorm.DB) {
 	}
 }
 
+func SeedDefaultCategories(db *gorm.DB) {
+	// Create Categories
+	categories := []models.Category{
+		{Name: "Shoes", Description: "All types of shoes", ImgURL: "https://example.com/shoes.jpg", BgImgURL: "https://example.com/bg_shoes.jpg", DisplayNavbar: true, DisplayFooter: true, Active: true},
+		{Name: "Clothing", Description: "All types of clothing", ImgURL: "https://example.com/clothing.jpg", BgImgURL: "https://example.com/bg_clothing.jpg", DisplayNavbar: true, DisplayFooter: true, Active: true},
+		{Name: "Accessories", Description: "All types of accessories", ImgURL: "https://example.com/accessories.jpg", BgImgURL: "https://example.com/bg_accessories.jpg", DisplayNavbar: true, DisplayFooter: true, Active: true},
+	}
+
+	for _, category := range categories {
+		result := db.Create(&category)
+		if result.Error != nil {
+			log.Println("Error creating category:", result.Error)
+		} else {
+			log.Println("Category created successfully:", category.Name)
+		}
+	}
+}
+
 func getAdminPermissions(db *gorm.DB) []models.Permission {
 	var permissions []models.Permission
 
