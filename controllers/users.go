@@ -22,7 +22,6 @@ import (
 // @Failure      404  {object}  models.Error
 // @Router       /users/me [get]
 func GetUserSelf(c *gin.Context) {
-
 	// Get Access Token from Cookies
 	tokenString, err := c.Cookie(config.JwtAccessName)
 

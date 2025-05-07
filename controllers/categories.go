@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// InsertCategory godoc
+// @Summary      Insert Category
+// @Description  Insert a new category into the database
+// @Param        category  body  models.Category  true  "Category object"
+// @Tags         category
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.Category
+// @Failure      401  {object}  models.Error
+// @Router       /categories/new [post]
 func InsertCategory(c *gin.Context) {
 	var body models.Category
 
@@ -40,10 +50,30 @@ func InsertCategory(c *gin.Context) {
 	})
 }
 
+// EditCategoryById godoc
+// @Summary      Edit Category by ID
+// @Description  Finds category by ID and updates with values provided in body
+// @Tags         category
+// @Param id path string true "Category ID"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.Category
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Router       /categories/id/{id} [put]
 func EditCategoryById(c *gin.Context) {
 
 }
 
+// GetCategories godoc
+// @Summary      Get Categories
+// @Description  Fetches all categories from DB
+// @Tags         category
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   models.Category
+// @Failure      401  {object}  models.Error
+// @Router       /categories [get]
 func GetCategories(c *gin.Context) {
 	var categories []models.Category
 
@@ -58,6 +88,17 @@ func GetCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, categories)
 }
 
+// GetCategoryById godoc
+// @Summary      Get Category by ID
+// @Description  Get Category by their ID
+// @Tags         category
+// @Param id path string true "Category ID"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.Category
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Router       /categories/id/{id} [get]
 func GetCategoryById(c *gin.Context) {
 	var category models.Category
 
@@ -71,6 +112,17 @@ func GetCategoryById(c *gin.Context) {
 	c.JSON(http.StatusOK, category)
 }
 
+// GetCategoryBySlug godoc
+// @Summary      Get Category by Slug
+// @Description  Get Category by their Slug
+// @Tags         category
+// @Param slug path string true "Category Slug"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   models.Category
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Router       /categories/slug/{slug} [get]
 func GetCategoryBySlug(c *gin.Context) {
 	var category models.Category
 
@@ -85,6 +137,17 @@ func GetCategoryBySlug(c *gin.Context) {
 
 }
 
+// DeleteCategoryById godoc
+// @Summary      Delete Category by ID
+// @Description  Delete Category by their ID
+// @Tags         category
+// @Param id path string true "Category ID"
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  models.Error
+// @Failure      401  {object}  models.Error
+// @Failure      404  {object}  models.Error
+// @Router       /categories/id/{id} [delete]
 func DeleteCategoryById(c *gin.Context) {
 
 }
