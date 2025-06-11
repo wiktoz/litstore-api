@@ -20,6 +20,7 @@ func init() {
 	initializers.ConnectDB()
 	initializers.SyncDatabase()
 	initializers.InitRedis()
+	initializers.InitR2Client()
 }
 
 // @title       Litstore WebAPI
@@ -65,6 +66,11 @@ func main() {
 			authRoutes.POST("/logout", controllers.Logout)     // LOGOUT
 			authRoutes.POST("/password/forgot")
 			authRoutes.POST("/password/change/:token")
+		}
+
+		fileRoutes := v1.Group("/files")
+		{
+			fileRoutes.POST("/new", middleware.Authorization(config.CreateFile), controllers.UploadFile)
 		}
 
 		variantRoutes := v1.Group("/variants")

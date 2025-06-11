@@ -49,10 +49,19 @@ const (
 	DeleteSubcategory Permission = "subcategory_delete"
 )
 
+/*
+Files Permissions
+*/
+const (
+	CreateFile Permission = "file_create"
+	DeleteFile Permission = "file_delete"
+)
+
 var AllPermissions = []Permission{
 	ReadProduct, CreateProduct, EditProduct, DeleteProduct,
 	ReadUser, EditUser, DeleteUser,
 	ReadVariant, CreateVariant, EditVariant, DeleteVariant,
 	CreateCategory, EditCategory, DeleteCategory,
 	CreateSubcategory, EditSubcategory, DeleteSubcategory,
+	CreateFile, DeleteFile,
 }
