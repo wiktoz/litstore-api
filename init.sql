@@ -21,3 +21,11 @@ BEGIN
         CREATE TYPE unit_type AS ENUM ('pc.', 'l', 'kg', 'set');
     END IF;
 END $$;
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'action_type') THEN
+        CREATE TYPE action_type AS ENUM ('password_reset', 'email_verification', 'admin_action');
+    END IF;
+END $$;

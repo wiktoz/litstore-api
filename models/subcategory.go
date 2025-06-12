@@ -3,6 +3,7 @@ package models
 import (
 	"litstore/api/utils"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,8 +19,8 @@ type Subcategory struct {
 	Active         bool   `gorm:"default:true" json:"active"`
 	Slug           string `gorm:"size:60;not null" json:"slug"`
 
-	CategoryID uint     `gorm:"not null" json:"category_id"`
-	Category   Category `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	CategoryID *uuid.UUID `gorm:"not null" json:"category_id"`
+	Category   Category   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Products []Product `gorm:"foreignKey:SubcategoryID"`
 }

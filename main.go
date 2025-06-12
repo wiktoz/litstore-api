@@ -61,11 +61,11 @@ func main() {
 
 		authRoutes := v1.Group("/auth")
 		{
-			authRoutes.POST("/login", controllers.Login)       // LOGIN
-			authRoutes.POST("/register", controllers.Register) // REGISTER
-			authRoutes.POST("/logout", controllers.Logout)     // LOGOUT
-			authRoutes.POST("/password/forgot")
-			authRoutes.POST("/password/change/:token")
+			authRoutes.POST("/login", controllers.Login)                         // LOGIN
+			authRoutes.POST("/register", controllers.Register)                   // REGISTER
+			authRoutes.POST("/logout", controllers.Logout)                       // LOGOUT
+			authRoutes.POST("/password/forgot", controllers.DemandResetPassword) // FORGOT PASSWORD
+			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword) // RESET PASSWORD
 		}
 
 		fileRoutes := v1.Group("/files")
@@ -110,6 +110,7 @@ func main() {
 			userRoutes.GET("/search/:phrase", middleware.Authorization(config.ReadUser), controllers.GetUsersBySearch)
 			userRoutes.PUT("/id/:id", middleware.Authorization(config.EditUser), controllers.EditUserById)
 			userRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteUser), controllers.DeleteUserById)
+			userRoutes.POST("/password/change", middleware.Authorization(""), controllers.ChangePassword) // Change password
 		}
 	}
 

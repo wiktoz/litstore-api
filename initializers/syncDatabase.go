@@ -21,6 +21,7 @@ func SyncDatabase() {
 		&models.Subcategory{},
 		&models.VariantOption{},
 		&models.Variant{},
+		&models.ActionToken{},
 	)
 
 	if err != nil {

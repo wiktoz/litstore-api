@@ -3,6 +3,7 @@ package models
 import (
 	"litstore/api/utils"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,8 +19,8 @@ type Product struct {
 	Variants     []Variant            `gorm:"many2many:products_variants" json:"variants"`
 	Items        []Item               `gorm:"foreignKey:ProductID" json:"items"`
 
-	CategoryID    *uint `json:"category_id" binding:"omitempty"`
-	SubcategoryID *uint `json:"subcategory_id" binding:"omitempty"`
+	CategoryID    *uuid.UUID `json:"category_id" binding:"omitempty"`
+	SubcategoryID *uuid.UUID `json:"subcategory_id" binding:"omitempty"`
 }
 
 func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
