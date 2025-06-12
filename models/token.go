@@ -2,12 +2,12 @@ package models
 
 import (
 	"errors"
+	"litstore/api/config"
 	"litstore/api/models/enums"
 	"litstore/api/utils"
 	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type ActionToken struct {
@@ -26,11 +26,13 @@ func GenerateActionToken(userID uuid.UUID, actionType enums.ActionType) (*Action
 		return nil, "", err
 	}
 
-	tokenHash, err := bcrypt.GenerateFromPassword([]byte(token), 12)
+	secret, err := utils.ReadHMACSecret(config.HMACSecretPath)
 
 	if err != nil {
 		return nil, "", err
 	}
+
+	tokenHash := utils.ComputeHMACToken(secret, token)
 
 	return &ActionToken{
 		UserID:     &userID,

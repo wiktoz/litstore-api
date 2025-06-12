@@ -8,6 +8,7 @@ import (
 	"litstore/api/models/enums"
 	"litstore/api/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -353,8 +354,7 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	// Get token from DB
-	var actionToken models.ActionToken
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Token), 12)
+	secret, err := utils.ReadHMACSecret(config.HMACSecretPath)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -364,7 +364,10 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	result := initializers.DB.Where("token_hash = ?", string(hash)).First(&actionToken)
+	hashedToken := utils.ComputeHMACToken(secret, body.Token)
+
+	var actionToken models.ActionToken
+	result := initializers.DB.Where("token_hash = ?", hashedToken).First(&actionToken)
 
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -387,7 +390,7 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	// Hash new password
-	hash, err = bcrypt.GenerateFromPassword([]byte(body.Password), 12)
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 12)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -411,6 +414,11 @@ func ResetPassword(c *gin.Context) {
 
 	user.Password = string(hash)
 	initializers.DB.Save(&user)
+
+	// Mark token as used
+	now := time.Now()
+	actionToken.UsedAt = &now
+	initializers.DB.Save(&actionToken)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

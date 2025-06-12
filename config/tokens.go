@@ -21,4 +21,6 @@ const (
 	JwtAccessName  string = "jwt_access_token"
 	JwtRefreshName string = "jwt_refresh_token"
 	CsrfName       string = "csrf_token"
+
+	HMACSecretPath string = "/app/keys/hmac_secret.key"
 )

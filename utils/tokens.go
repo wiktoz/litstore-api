@@ -2,13 +2,16 @@ package utils
 
 import (
 	"crypto/ecdsa"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"litstore/api/config"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +56,20 @@ func readECPublicKey(filename string) (*ecdsa.PublicKey, error) {
 	}
 
 	return publicKey, nil
+}
+
+func ReadHMACSecret(filename string) (string, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
+func ComputeHMACToken(secret, token string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(token))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func GenerateJWT(userID string, tokenType string) (string, error) {
