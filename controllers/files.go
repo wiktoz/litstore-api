@@ -1,8 +1,12 @@
 package controllers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"litstore/api/initializers"
+	"litstore/api/models"
 	"litstore/api/upload"
 	"net/http"
 	"os"
@@ -12,33 +16,90 @@ import (
 	"github.com/google/uuid"
 )
 
-func UploadFile(c *gin.Context) {
-	file, err := c.FormFile("file")
+func UploadImages(c *gin.Context) {
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Files are too large",
+		})
+		return
+	}
 
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No file is received"})
+	files := c.Request.MultipartForm.File["files"]
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "No files uploaded",
+		})
 		return
 	}
 
 	bucket := os.Getenv("R2_BUCKET_NAME")
 	endpoint := os.Getenv("R2_URL")
-
 	uploader := upload.NewR2Uploader(initializers.R2Client, bucket, endpoint)
 
-	id := uuid.New()
+	var uploadedImages []map[string]any
 
-	ext := filepath.Ext(file.Filename)
+	for _, fileHeader := range files {
+		src, err := fileHeader.Open()
+		if err != nil {
+			continue // skip file on error
+		}
 
-	filename := fmt.Sprintf("%s%s", id.String(), ext)
+		content, err := io.ReadAll(src)
+		src.Close()
+		if err != nil {
+			continue // skip on read error
+		}
 
-	url, err := uploader.Upload(c.Request.Context(), filename, file)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		// Compute SHA256 hash
+		hash := sha256.Sum256(content)
+		hashHex := hex.EncodeToString(hash[:])
+
+		// Check DB for existing image
+		var existingImage models.Image
+		err = initializers.DB.Where("hash = ?", hashHex).First(&existingImage).Error
+		if err == nil {
+			// Image exists, reuse metadata
+			uploadedImages = append(uploadedImages, map[string]any{
+				"image_id":       existingImage.ID,
+				"url":            existingImage.URL,
+				"already_exists": true,
+			})
+			continue
+		}
+
+		// Generate filename and upload
+		id := uuid.New()
+		ext := filepath.Ext(fileHeader.Filename)
+		filename := fmt.Sprintf("%s%s", id.String(), ext)
+
+		url, err := uploader.Upload(c.Request.Context(), filename, fileHeader)
+		if err != nil {
+			continue // skip on upload error
+		}
+
+		// Store in DB
+		image := models.Image{
+			Hash:        hashHex,
+			URL:         url,
+			Size:        int64(len(content)),
+			MimeType:    fileHeader.Header.Get("Content-Type"),
+			Description: "", // optionally accept description from form or separate call
+		}
+
+		if err := initializers.DB.Create(&image).Error; err != nil {
+			continue
+		}
+
+		uploadedImages = append(uploadedImages, map[string]any{
+			"image_id":       image.ID,
+			"url":            image.URL,
+			"already_exists": false,
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "File uploaded successfully",
-		"url":     url,
+		"uploaded": uploadedImages,
 	})
 }

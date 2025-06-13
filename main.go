@@ -68,9 +68,9 @@ func main() {
 			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword) // RESET PASSWORD
 		}
 
-		fileRoutes := v1.Group("/files")
+		imagesRoutes := v1.Group("/images")
 		{
-			fileRoutes.POST("/new", middleware.Authorization(config.CreateFile), controllers.UploadFile)
+			imagesRoutes.POST("/new", middleware.Authorization(config.CreateFile), controllers.UploadImages)
 		}
 
 		variantRoutes := v1.Group("/variants")

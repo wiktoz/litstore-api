@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func GetProducts(c *gin.Context) {
@@ -51,14 +53,30 @@ func GetProductBySlug(c *gin.Context) {
 
 	var product models.Product
 
-	result := initializers.DB.Where("slug = ?", slug).Find(&product)
+	err := initializers.DB.
+		Preload("ProductImages", func(db *gorm.DB) *gorm.DB {
+			return db.Order("order_index ASC")
+		}).
+		Preload("ProductImages.Image").
+		Preload("Descriptions").
+		Preload("Variants").
+		Preload("Items").
+		First(&product, "slug = ?", slug).Error
 
-	if result.Error != nil {
-		c.JSON(http.StatusOK, gin.H{
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "Product not found",
+			})
+			return
+		}
+
+		// Some other DB error
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Cannot find product",
+			"message": "Database error",
 		})
-
 		return
 	}
 
@@ -127,33 +145,69 @@ func GetProductsBySearch(c *gin.Context) {
 }
 
 func InsertProduct(c *gin.Context) {
-	var body models.Product
+	type CreateProductInput struct {
+		Name          string     `json:"name" binding:"required,min=3"`
+		Manufacturer  string     `json:"manufacturer" binding:"required,min=3"`
+		New           bool       `json:"new"`
+		Active        bool       `json:"active"`
+		CategoryID    *uuid.UUID `json:"category_id"`
+		SubcategoryID *uuid.UUID `json:"subcategory_id"`
 
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Invalid request body",
-			"err":     err.Error(),
-		})
+		ImageIDs []uuid.UUID `json:"image_ids" binding:"required"`
+	}
 
+	var input CreateProductInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	result := initializers.DB.Create(&body)
+	// Create product instance
+	product := models.Product{
+		Name:          input.Name,
+		Manufacturer:  input.Manufacturer,
+		New:           input.New,
+		Active:        input.Active,
+		CategoryID:    input.CategoryID,
+		SubcategoryID: input.SubcategoryID,
+	}
 
-	if result.Error != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "Cannot create product",
-			"err":     result.Error,
-		})
+	tx := initializers.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
+	if err := tx.Create(&product).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Successfully created product",
-		"product": result,
-	})
+	// Prepare ProductImages join records
+	var productImages []models.ProductImage
+	for i := range input.ImageIDs {
+		productImages = append(productImages, models.ProductImage{
+			ProductID:  product.ID,
+			ImageID:    input.ImageIDs[i],
+			OrderIndex: i,
+		})
+	}
+
+	if len(productImages) > 0 {
+		if err := tx.Create(&productImages).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
+			return
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": product})
 }
