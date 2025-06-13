@@ -8,5 +8,5 @@ type VariantOption struct {
 	Name       string     `gorm:"size:60;not null" json:"name"`
 	OrderIndex uint       `gorm:"not null" json:"order_index"`
 
-	Items []Item `gorm:"foreignKey:VariantOptionID"`
+	Items []Item `gorm:"many2many:item_variant_options" json:"-"`
 }

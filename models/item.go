@@ -2,6 +2,8 @@ package models
 
 import (
 	"litstore/api/models/enums"
+
+	"github.com/google/uuid"
 )
 
 type Item struct {
@@ -11,11 +13,12 @@ type Item struct {
 	Stock      uint       `gorm:"not null" json:"stock"`
 	Unit       enums.Unit `gorm:"type:unit_type;default:'pc.'" json:"unit"`
 	SKU        string     `gorm:"size:30;not null;unique" json:"sku"`
+	Active     bool       `gorm:"default:false" json:"active"`
 
-	ProductID       uint          `gorm:"not null" json:"product_id"`
-	VariantOptionID uint          `gorm:"not null" json:"variant_option_id"`
-	Product         Product       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	VariantOption   VariantOption `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ProductID uuid.UUID `gorm:"not null" json:"product_id"`
+	Product   Product   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+
+	VariantOptions []VariantOption `gorm:"many2many:item_variant_options" json:"variant_options"`
 
 	Deliveries []Delivery `gorm:"many2many:items_deliveries" json:"deliveries"`
 }
