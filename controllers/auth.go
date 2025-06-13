@@ -163,10 +163,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	sendVerificationEmail(user.Email)
+
 	// Response
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "Successfully registered",
+		"message": "Successfully registered, verification email sent",
 	})
 }
 
@@ -206,6 +208,131 @@ func Logout(c *gin.Context) {
 	})
 }
 
+func VerifyEmail(c *gin.Context) {
+	var body struct {
+		Token string `json:"token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Incorrect data provided",
+		})
+		return
+	}
+
+	// Get token from DB
+	secret, err := utils.ReadHMACSecret(config.HMACSecretPath)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Internal error",
+		})
+		return
+	}
+
+	hashedToken := utils.ComputeHMACToken(secret, body.Token)
+
+	var actionToken models.ActionToken
+	result := initializers.DB.Where("token_hash = ?", hashedToken).First(&actionToken)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Token not valid",
+		})
+
+		return
+	}
+
+	// Verify token
+	err = models.VerifyActionToken(&actionToken)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Token not valid",
+		})
+		return
+	}
+
+	// Update user confirmation status
+	var user models.User
+	result = initializers.DB.Where("ID = ?", actionToken.UserID).First(&user)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Internal error",
+		})
+		return
+	}
+	user.Confirmed = true
+	result = initializers.DB.Save(&user)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Internal error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Email verified successfully",
+	})
+}
+
+func sendVerificationEmail(email string) {
+	// Attempt to find user silently
+	var user models.User
+	result := initializers.DB.Where("email = ?", email).First(&user)
+
+	// If user exists and is not confirmed, proceed
+	if result.Error == nil && !user.Confirmed {
+		// Revoke old, unused, unexpired tokens
+		initializers.DB.Model(&models.ActionToken{}).
+			Where("user_id = ? AND action = ? AND used_at IS NULL AND expires_at > ?", user.ID, enums.EmailVerification, time.Now()).
+			Update("used_at", time.Now())
+
+		// Generate new token
+		actionToken, token, err := models.GenerateActionToken(user.ID, enums.EmailVerification)
+		if err != nil {
+			return // silent failure
+		}
+
+		// Store new token
+		if createErr := initializers.DB.Create(actionToken).Error; createErr != nil {
+			return // silent failure
+		}
+
+		// Send email
+		_ = emails.SendVerificationEmail(user.Email, token) // silently ignore errors
+	}
+}
+
+func ResendVerificationEmail(c *gin.Context) {
+	var body struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Incorrect data provided",
+		})
+		return
+	}
+
+	sendVerificationEmail(body.Email)
+
+	// Always return success regardless of internal logic
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "If the email is registered and not verified, a verification email will be sent.",
+	})
+}
+
 func ChangePassword(c *gin.Context) {
 	var body struct {
 		OldPassword string `json:"old_password" binding:"required"`
@@ -221,27 +348,10 @@ func ChangePassword(c *gin.Context) {
 	}
 
 	// Get user from context
-	tokenString, err := c.Cookie(config.JwtAccessName)
+	userID, exists := c.Get("userID")
 
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token passed", "success": false})
-		c.Abort()
-		return
-	}
-
-	token, err := utils.ParseJWT(tokenString)
-
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
-		c.Abort()
-		return
-	}
-
-	userID, err := token.Claims.GetSubject()
-
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "success": false})
-		c.Abort()
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error{Message: "UserID not provided"})
 		return
 	}
 
@@ -261,7 +371,7 @@ func ChangePassword(c *gin.Context) {
 	}
 
 	// Compare hashes
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.OldPassword))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.OldPassword))
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

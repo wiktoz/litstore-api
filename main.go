@@ -61,11 +61,13 @@ func main() {
 
 		authRoutes := v1.Group("/auth")
 		{
-			authRoutes.POST("/login", controllers.Login)                         // LOGIN
-			authRoutes.POST("/register", controllers.Register)                   // REGISTER
-			authRoutes.POST("/logout", controllers.Logout)                       // LOGOUT
-			authRoutes.POST("/password/forgot", controllers.DemandResetPassword) // FORGOT PASSWORD
-			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword) // RESET PASSWORD
+			authRoutes.POST("/login", controllers.Login)                          // LOGIN
+			authRoutes.POST("/register", controllers.Register)                    // REGISTER
+			authRoutes.POST("/logout", controllers.Logout)                        // LOGOUT
+			authRoutes.POST("/password/forgot", controllers.DemandResetPassword)  // FORGOT PASSWORD
+			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword)  // RESET PASSWORD
+			authRoutes.POST("/email/verify", controllers.VerifyEmail)             // VERIFY EMAIL
+			authRoutes.POST("/email/resend", controllers.ResendVerificationEmail) // RESEND VERIFICATION EMAIL
 		}
 
 		imagesRoutes := v1.Group("/images")
@@ -112,8 +114,9 @@ func main() {
 			userRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteUser), controllers.DeleteUserById)
 			userRoutes.POST("/password/change", middleware.Authorization(""), controllers.ChangePassword) // Change password
 
-			userRoutes.POST("/address/new", middleware.Authorization(""), controllers.InsertUserAddress) // Add new address
-			userRoutes.GET("/address/all", middleware.Authorization(""), controllers.GetUserAddresses)   // Get all addresses
+			userRoutes.POST("/address/new", middleware.Authorization(""), controllers.InsertUserAddress)   // Add new address
+			userRoutes.GET("/address/all", middleware.Authorization(""), controllers.GetUserAddresses)     // Get all addresses
+			userRoutes.DELETE("/address/:id", middleware.Authorization(""), controllers.DeleteUserAddress) // Delete address
 		}
 	}
 

@@ -280,6 +280,7 @@ func GetUserAddresses(c *gin.Context) {
 
 	for _, addr := range addresses {
 		response = append(response, responses.GetUserAddressesResponse{
+			ID:       addr.ID.String(),
 			Name:     addr.Name,
 			Surname:  addr.Surname,
 			Street:   addr.Street,
@@ -293,4 +294,24 @@ func GetUserAddresses(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func DeleteUserAddress(c *gin.Context) {
+	id := c.Param("id")
+
+	userID, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error{Message: "UserID not provided"})
+		return
+	}
+
+	result := initializers.DB.Where("user_id = ? AND id = ?", userID, id).Delete(&models.Address{})
+
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, models.Error{Message: "Address not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Error{Message: "Address deleted successfully"})
 }

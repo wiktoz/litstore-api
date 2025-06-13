@@ -11,3 +11,7 @@ type InsertUserAddressRequest struct {
 	Phone    string `json:"phone" binding:"required,max=20"`
 	Country  string `json:"country" binding:"required,max=60"`
 }
+
+type DeleteUserAddressRequest struct {
+	AddressID string `json:"address_id" binding:"required"`
+}
