@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"litstore/api/config"
+	"litstore/api/dto/requests"
+	"litstore/api/dto/responses"
 	"litstore/api/initializers"
 	"litstore/api/models"
 	"litstore/api/utils"
@@ -9,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // GetSelfUser godoc
@@ -203,4 +206,91 @@ func DeleteUserById(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.Error{Message: "User deleted"})
+}
+
+func InsertUserAddress(c *gin.Context) {
+	var body requests.InsertUserAddressRequest
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, models.Error{Message: "Invalid body data"})
+		return
+	}
+
+	userID, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error{Message: "UserID not provided"})
+		return
+	}
+
+	var count int64
+	err := initializers.DB.Model(&models.Address{}).Where("user_id = ?", userID).Count(&count).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Error{Message: "Failed to insert address"})
+		return
+	}
+
+	address := models.Address{
+		UserID:     userID.(uuid.UUID),
+		Name:       body.Name,
+		Surname:    body.Surname,
+		Street:     body.Street,
+		House:      body.House,
+		Flat:       body.Flat,
+		PostCode:   body.PostCode,
+		City:       body.City,
+		Phone:      body.Phone,
+		Country:    body.Country,
+		OrderIndex: uint(count),
+	}
+
+	result := initializers.DB.Create(&address)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, models.Error{Message: "Failed to insert address"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "Address inserted successfully",
+		"address": address,
+	})
+}
+
+func GetUserAddresses(c *gin.Context) {
+	userID, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error{Message: "UserID not provided"})
+		return
+	}
+
+	var addresses []models.Address
+
+	result := initializers.DB.Where("user_id = ?", userID).Order("order_index").Find(&addresses)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, models.Error{Message: "Failed to fetch addresses"})
+		return
+	}
+
+	// map to DTO
+	response := make([]responses.GetUserAddressesResponse, 0, len(addresses))
+
+	for _, addr := range addresses {
+		response = append(response, responses.GetUserAddressesResponse{
+			Name:     addr.Name,
+			Surname:  addr.Surname,
+			Street:   addr.Street,
+			House:    addr.House,
+			Flat:     addr.Flat,
+			PostCode: addr.PostCode,
+			City:     addr.City,
+			Phone:    addr.Phone,
+			Country:  addr.Country,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }

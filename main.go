@@ -111,6 +111,9 @@ func main() {
 			userRoutes.PUT("/id/:id", middleware.Authorization(config.EditUser), controllers.EditUserById)
 			userRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteUser), controllers.DeleteUserById)
 			userRoutes.POST("/password/change", middleware.Authorization(""), controllers.ChangePassword) // Change password
+
+			userRoutes.POST("/address/new", middleware.Authorization(""), controllers.InsertUserAddress) // Add new address
+			userRoutes.GET("/address/all", middleware.Authorization(""), controllers.GetUserAddresses)   // Get all addresses
 		}
 	}
 

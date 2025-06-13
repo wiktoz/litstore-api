@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func CSRF() gin.HandlerFunc {
@@ -81,6 +82,19 @@ func Authorization(requiredPermission config.Permission) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// Save userID in context for further use
+		userIDObj, err := uuid.Parse(userID)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"error":   "Failed to parse token",
+			})
+
+			c.Abort()
+			return
+		}
+		c.Set("userID", userIDObj)
 
 		// Get user details
 		var user models.User
