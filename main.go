@@ -61,13 +61,13 @@ func main() {
 
 		authRoutes := v1.Group("/auth")
 		{
-			authRoutes.POST("/login", controllers.Login)                          // LOGIN
-			authRoutes.POST("/register", controllers.Register)                    // REGISTER
-			authRoutes.POST("/logout", controllers.Logout)                        // LOGOUT
-			authRoutes.POST("/password/forgot", controllers.DemandResetPassword)  // FORGOT PASSWORD
-			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword)  // RESET PASSWORD
-			authRoutes.POST("/email/verify", controllers.VerifyEmail)             // VERIFY EMAIL
-			authRoutes.POST("/email/resend", controllers.ResendVerificationEmail) // RESEND VERIFICATION EMAIL
+			authRoutes.POST("/login", controllers.Login)                                 // LOGIN
+			authRoutes.POST("/register", controllers.Register)                           // REGISTER
+			authRoutes.POST("/logout", middleware.Authorization(""), controllers.Logout) // LOGOUT
+			authRoutes.POST("/password/forgot", controllers.DemandResetPassword)         // FORGOT PASSWORD
+			authRoutes.POST("/password/forgot/reset", controllers.ResetPassword)         // RESET PASSWORD
+			authRoutes.POST("/email/verify", controllers.VerifyEmail)                    // VERIFY EMAIL
+			authRoutes.POST("/email/resend", controllers.ResendVerificationEmail)        // RESEND VERIFICATION EMAIL
 		}
 
 		imagesRoutes := v1.Group("/images")
