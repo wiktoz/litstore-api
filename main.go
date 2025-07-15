@@ -57,6 +57,8 @@ func main() {
 			productRoutes.PUT("/id/:id", middleware.Authorization(config.EditProduct), controllers.EditProductById)        // EDIT the product
 			productRoutes.DELETE("/id/:id", middleware.Authorization(config.DeleteProduct), controllers.DeleteProductById) // DELETE the product
 			productRoutes.GET("/search/:phrase", controllers.GetProductsBySearch)                                          // SEARCH for product
+			productRoutes.GET("/category/id/:category_id", controllers.GetProductsByCategory)                              // GET products by category
+			productRoutes.GET("/subcategory/id/:subcategory_id", controllers.GetProductsBySubcategory)                     // GET products by subcategory
 		}
 
 		authRoutes := v1.Group("/auth")

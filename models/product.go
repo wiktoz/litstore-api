@@ -18,6 +18,7 @@ type Product struct {
 	Descriptions  []ProductDescription `gorm:"foreignKey:ProductID" json:"descriptions"`
 	ProductImages []ProductImage       `gorm:"foreignKey:ProductID" json:"images"`
 	Variants      []Variant            `gorm:"many2many:products_variants" json:"variants"`
+	Deliveries    []Delivery           `gorm:"many2many:products_deliveries" json:"deliveries"`
 	Items         []Item               `gorm:"foreignKey:ProductID" json:"items"`
 
 	CategoryID    *uuid.UUID `json:"category_id" binding:"omitempty"`

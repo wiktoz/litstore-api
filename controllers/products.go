@@ -145,6 +145,62 @@ func GetProductsBySearch(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+func GetProductsByCategory(c *gin.Context) {
+	categoryID := c.Param("category_id")
+
+	// Validate the category ID format (e.g., UUID with 36 characters)
+	if len(categoryID) != 36 || !utils.ValidateUUID(categoryID) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid category ID format!",
+		})
+		return
+	}
+
+	var products []models.Product
+
+	result := initializers.DB.Where("category_id = ?", categoryID).Find(&products)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "No products found for this category",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}
+
+func GetProductsBySubcategory(c *gin.Context) {
+	subcategoryID := c.Param("subcategory_id")
+
+	// Validate the subcategory ID format (e.g., UUID with 36 characters)
+	if len(subcategoryID) != 36 || !utils.ValidateUUID(subcategoryID) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid subcategory ID format!",
+		})
+		return
+	}
+
+	var products []models.Product
+
+	result := initializers.DB.Where("subcategory_id = ?", subcategoryID).Find(&products)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "No products found for this subcategory",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}
+
 func InsertProduct(c *gin.Context) {
 	type CreateProductInput struct {
 		Name          string      `json:"name" binding:"required,min=3"`
