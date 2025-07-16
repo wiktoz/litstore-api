@@ -1,5 +1,64 @@
 basePath: /api/v1
 definitions:
+  enums.ActionType:
+    enum:
+    - password_reset
+    - email_verification
+    - admin_action
+    type: string
+    x-enum-varnames:
+    - PasswordReset
+    - EmailVerification
+    - AdminAction
+  enums.Lang:
+    enum:
+    - pl
+    - en
+    - fr
+    - de
+    type: string
+    x-enum-varnames:
+    - Polish
+    - English
+    - French
+    - German
+  enums.SelectType:
+    enum:
+    - button
+    - select
+    type: string
+    x-enum-varnames:
+    - Button
+    - Select
+  enums.Unit:
+    enum:
+    - pc.
+    - l
+    - kg
+    - set
+    type: string
+    x-enum-varnames:
+    - Piece
+    - Liter
+    - Kilo
+    - Set
+  models.ActionToken:
+    properties:
+      action_type:
+        $ref: '#/definitions/enums.ActionType'
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      used_at:
+        type: string
+      userID:
+        type: string
+    type: object
   models.Address:
     properties:
       city:
@@ -29,12 +88,122 @@ definitions:
       updated_at:
         type: string
       user_id:
-        type: integer
-    type: object
-  models.Error:
-    properties:
-      message:
         type: string
+    type: object
+  models.Category:
+    properties:
+      active:
+        type: boolean
+      bg_img_url:
+        type: string
+      created_at:
+        type: string
+      description:
+        minLength: 3
+        type: string
+      display_footer:
+        type: boolean
+      display_navbar:
+        type: boolean
+      id:
+        type: string
+      img_url:
+        type: string
+      name:
+        minLength: 3
+        type: string
+      products:
+        items:
+          $ref: '#/definitions/models.Product'
+        type: array
+      seo_description:
+        type: string
+      slug:
+        type: string
+      subcategories:
+        items:
+          $ref: '#/definitions/models.Subcategory'
+        type: array
+      updated_at:
+        type: string
+    required:
+    - description
+    - name
+    type: object
+  models.Delivery:
+    properties:
+      active:
+        type: boolean
+      cash_on_delivery:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      free_from:
+        type: number
+      id:
+        type: string
+      img:
+        type: string
+      name:
+        type: string
+      personal_collect:
+        type: boolean
+      price:
+        type: number
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Image:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      mime_type:
+        type: string
+      size:
+        type: integer
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  models.Item:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      deliveries:
+        items:
+          $ref: '#/definitions/models.Delivery'
+        type: array
+      id:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: string
+      promo_price:
+        type: number
+      sku:
+        type: string
+      stock:
+        type: integer
+      unit:
+        $ref: '#/definitions/enums.Unit'
+      updated_at:
+        type: string
+      variant_options:
+        items:
+          $ref: '#/definitions/models.VariantOption'
+        type: array
     type: object
   models.Permission:
     properties:
@@ -46,6 +215,76 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  models.Product:
+    properties:
+      active:
+        type: boolean
+      category_id:
+        type: string
+      created_at:
+        type: string
+      deliveries:
+        items:
+          $ref: '#/definitions/models.Delivery'
+        type: array
+      descriptions:
+        items:
+          $ref: '#/definitions/models.ProductDescription'
+        type: array
+      id:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/models.ProductImage'
+        type: array
+      items:
+        items:
+          $ref: '#/definitions/models.Item'
+        type: array
+      manufacturer:
+        minLength: 3
+        type: string
+      name:
+        minLength: 3
+        type: string
+      new:
+        type: boolean
+      slug:
+        type: string
+      subcategory_id:
+        type: string
+      updated_at:
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/models.Variant'
+        type: array
+    required:
+    - manufacturer
+    - name
+    type: object
+  models.ProductDescription:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      lang:
+        $ref: '#/definitions/enums.Lang'
+      product_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ProductImage:
+    properties:
+      image:
+        $ref: '#/definitions/models.Image'
+      order_index:
+        type: integer
     type: object
   models.Role:
     properties:
@@ -59,6 +298,41 @@ definitions:
         items:
           $ref: '#/definitions/models.Permission'
         type: array
+      updated_at:
+        type: string
+    type: object
+  models.Subcategory:
+    properties:
+      active:
+        type: boolean
+      bg_img:
+        type: string
+      category:
+        $ref: '#/definitions/models.Category'
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      display_footer:
+        type: boolean
+      display_navbar:
+        type: boolean
+      id:
+        type: string
+      img:
+        type: string
+      name:
+        type: string
+      products:
+        items:
+          $ref: '#/definitions/models.Product'
+        type: array
+      seo_description:
+        type: string
+      slug:
+        type: string
       updated_at:
         type: string
     type: object
@@ -88,7 +362,156 @@ definitions:
         items:
           $ref: '#/definitions/models.Role'
         type: array
+      tokens:
+        items:
+          $ref: '#/definitions/models.ActionToken'
+        type: array
       updated_at:
+        type: string
+    type: object
+  models.Variant:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/models.VariantOption'
+        type: array
+      select_type:
+        $ref: '#/definitions/enums.SelectType'
+      updated_at:
+        type: string
+    type: object
+  models.VariantOption:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order_index:
+        type: integer
+      updated_at:
+        type: string
+      variant_id:
+        type: string
+    type: object
+  requests.DemandResetPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  requests.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  requests.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  requests.ResendVerificationEmailRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  requests.ResetPasswordRequest:
+    properties:
+      password:
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - token
+    type: object
+  requests.VerifyEmail:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  responses.Error:
+    properties:
+      message:
+        type: string
+    type: object
+  responses.GetUserAddressResponse:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      flat:
+        type: string
+      house:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      post_code:
+        type: string
+      street:
+        type: string
+      surname:
+        type: string
+    type: object
+  responses.GetUserResponse:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/models.Address'
+        type: array
+      blocked:
+        type: boolean
+      confirmed:
+        type: boolean
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  responses.Success:
+    properties:
+      message:
         type: string
     type: object
 host: localhost:8000
@@ -98,6 +521,361 @@ info:
   title: Litstore WebAPI
   version: "1.0"
 paths:
+  /auth/email/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resend Email with Verification Token to activate user's account
+      parameters:
+      - description: Email address to resend verification token
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/requests.ResendVerificationEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Resend Verification Email
+      tags:
+      - auth
+  /auth/email/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify account by clicking link from email message
+      parameters:
+      - description: Token from email message for email verification
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/requests.VerifyEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Verify email
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user by email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/requests.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user by revoking JWT Token and destroying Cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Logout user
+      tags:
+      - auth
+  /auth/password/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Send Token on email when user forgot their password
+      parameters:
+      - description: Email address to send password reset token
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/requests.DemandResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Demand Password Reset
+      tags:
+      - auth
+  /auth/password/forgot/reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset password with Token obtained from Email and set a new password
+      parameters:
+      - description: Token from email message and a new password
+        in: body
+        name: tokenPassword
+        required: true
+        schema:
+          $ref: '#/definitions/requests.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Password Reset
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: Register credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Register a new user
+      tags:
+      - auth
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: Fetches all categories from DB
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Get Categories
+      tags:
+      - category
+  /categories/id/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Category by their ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Delete Category by ID
+      tags:
+      - category
+    get:
+      consumes:
+      - application/json
+      description: Get Category by their ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Get Category by ID
+      tags:
+      - category
+    put:
+      consumes:
+      - application/json
+      description: Finds category by ID and updates with values provided in body
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Edit Category by ID
+      tags:
+      - category
+  /categories/new:
+    post:
+      consumes:
+      - application/json
+      description: Insert a new category into the database
+      parameters:
+      - description: Category object
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.Category'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Insert Category
+      tags:
+      - category
+  /categories/slug/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Get Category by their Slug
+      parameters:
+      - description: Category Slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Get Category by Slug
+      tags:
+      - category
+  /user/password/change:
+    post:
+      consumes:
+      - application/json
+      description: Change Password for currently logged user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Change Password
+      tags:
+      - user
   /users:
     get:
       consumes:
@@ -110,13 +888,86 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.User'
+              $ref: '#/definitions/responses.GetUserResponse'
             type: array
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Get Users
+      tags:
+      - user
+  /users/address/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes user's address by specified ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.Success'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Delete user address by ID
+      tags:
+      - user
+  /users/address/all:
+    get:
+      consumes:
+      - application/json
+      description: Fetches all addresses for currently logged user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/responses.GetUserAddressResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Fetches all user's addresses
+      tags:
+      - user
+  /users/address/new:
+    post:
+      consumes:
+      - application/json
+      description: Inserts address for currently logged user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responses.GetUserAddressResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/responses.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/responses.Error'
+      summary: Inserts user's address
       tags:
       - user
   /users/id/{id}:
@@ -136,15 +987,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Success'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Deletes user
       tags:
       - user
@@ -168,11 +1019,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Get User by ID
       tags:
       - user
@@ -192,19 +1043,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            $ref: '#/definitions/responses.GetUserResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Updates user data
       tags:
       - user
@@ -219,15 +1070,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            $ref: '#/definitions/responses.GetUserResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Get Self User
       tags:
       - user
@@ -249,16 +1100,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.User'
+              $ref: '#/definitions/responses.GetUserResponse'
             type: array
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/models.Error'
+            $ref: '#/definitions/responses.Error'
       summary: Get Users by Search
       tags:
       - user

@@ -19,9 +19,10 @@ import (
 // Login godoc
 // @Summary      Login user
 // @Description  Login user by email and password
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param credentials body requests.LoginRequest true "Login credentials"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/login [post]
@@ -103,9 +104,10 @@ func Login(c *gin.Context) {
 // Register godoc
 // @Summary      Register a new user
 // @Description  Register a new user with email and password
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param credentials body requests.RegisterRequest true "Register credentials"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/register [post]
@@ -174,7 +176,7 @@ func Register(c *gin.Context) {
 // Logout godoc
 // @Summary      Logout user
 // @Description  Logout user by revoking JWT Token and destroying Cookies
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}  responses.Success
@@ -219,9 +221,10 @@ func Logout(c *gin.Context) {
 // VerifyEmail godoc
 // @Summary      Verify email
 // @Description  Verify account by clicking link from email message
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param token body requests.VerifyEmail true "Token from email message for email verification"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/email/verify [post]
@@ -329,9 +332,10 @@ func sendVerificationEmail(email string) {
 // ResendVerificationEmail godoc
 // @Summary      Resend Verification Email
 // @Description  Resend Email with Verification Token to activate user's account
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param email body requests.ResendVerificationEmailRequest true "Email address to resend verification token"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/email/resend [post]
@@ -358,9 +362,10 @@ func ResendVerificationEmail(c *gin.Context) {
 // DemandResetPassword godoc
 // @Summary      Demand Password Reset
 // @Description  Send Token on email when user forgot their password
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param email body requests.DemandResetPasswordRequest true "Email address to send password reset token"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/password/forgot [post]
@@ -402,9 +407,10 @@ func DemandResetPassword(c *gin.Context) {
 // ResetPassword godoc
 // @Summary      Password Reset
 // @Description  Reset password with Token obtained from Email and set a new password
-// @Tags         user
+// @Tags         auth
 // @Accept       json
 // @Produce      json
+// @Param tokenPassword body requests.ResetPasswordRequest true "Token from email message and a new password"
 // @Success      200  {object}  responses.Success
 // @Failure      400  {object}  responses.Error
 // @Router       /auth/password/forgot/reset [post]

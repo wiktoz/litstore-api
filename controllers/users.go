@@ -97,8 +97,8 @@ func GetUsers(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.User
-// @Failure      401  {object}  models.Error
-// @Failure      404  {object}  models.Error
+// @Failure      401  {object}  responses.Error
+// @Failure      404  {object}  responses.Error
 // @Router       /users/id/{id} [get]
 func GetUserById(c *gin.Context) {
 	id := c.Param("id")
