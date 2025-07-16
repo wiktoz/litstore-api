@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"litstore/api/config"
+	"litstore/api/dto/requests"
+	"litstore/api/dto/responses"
 	"litstore/api/emails"
 	"litstore/api/initializers"
 	"litstore/api/models"
@@ -14,18 +16,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Login godoc
+// @Summary      Login user
+// @Description  Login user by email and password
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/login [post]
 func Login(c *gin.Context) {
-	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var body requests.LoginRequest
 
 	// No data sent
 	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Incorrect data provided",
-		})
+		c.JSON(http.StatusBadRequest, responses.Error{Message: "Invalid email or password"})
 
 		return
 	}
@@ -37,10 +42,7 @@ func Login(c *gin.Context) {
 	result := initializers.DB.Where(&userToFind).First(&user)
 
 	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Invalid email or password",
-		})
+		c.JSON(http.StatusBadRequest, responses.Error{Message: "Invalid email or password"})
 
 		return
 	}
@@ -49,10 +51,7 @@ func Login(c *gin.Context) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Invalid email or password",
-		})
+		c.JSON(http.StatusBadRequest, responses.Error{Message: "Invalid email or password"})
 
 		return
 	}
@@ -63,10 +62,7 @@ func Login(c *gin.Context) {
 	csrfToken, errCsrfToken := utils.GenerateToken()
 
 	if errAccessToken != nil || errRefreshToken != nil || errCsrfToken != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Internal error",
-		})
+		c.JSON(http.StatusBadRequest, responses.Error{Message: "Error. Try again later"})
 
 		return
 	}
@@ -101,17 +97,20 @@ func Login(c *gin.Context) {
 		MaxAge:   int(config.CsrfExpTime),
 	})
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Successfully logged in",
-	})
+	c.JSON(http.StatusOK, responses.Success{Message: "Successfully logged in"})
 }
 
+// Register godoc
+// @Summary      Register a new user
+// @Description  Register a new user with email and password
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/register [post]
 func Register(c *gin.Context) {
-	var body struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
+	var body requests.RegisterRequest
 
 	// No data sent
 	if c.Bind(&body) != nil {
@@ -172,6 +171,15 @@ func Register(c *gin.Context) {
 	})
 }
 
+// Logout godoc
+// @Summary      Logout user
+// @Description  Logout user by revoking JWT Token and destroying Cookies
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      500  {object}  responses.Error
+// @Router       /auth/logout [post]
 func Logout(c *gin.Context) {
 	// Revoking refresh token
 	refreshToken := utils.Token{Name: config.JwtRefreshName, ExpTime: config.JwtRefreshExpTime}
@@ -208,10 +216,17 @@ func Logout(c *gin.Context) {
 	})
 }
 
+// VerifyEmail godoc
+// @Summary      Verify email
+// @Description  Verify account by clicking link from email message
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/email/verify [post]
 func VerifyEmail(c *gin.Context) {
-	var body struct {
-		Token string `json:"token" binding:"required"`
-	}
+	var body requests.VerifyEmail
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -311,10 +326,17 @@ func sendVerificationEmail(email string) {
 	}
 }
 
+// ResendVerificationEmail godoc
+// @Summary      Resend Verification Email
+// @Description  Resend Email with Verification Token to activate user's account
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/email/resend [post]
 func ResendVerificationEmail(c *gin.Context) {
-	var body struct {
-		Email string `json:"email" binding:"required,email"`
-	}
+	var body requests.ResendVerificationEmailRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -333,89 +355,17 @@ func ResendVerificationEmail(c *gin.Context) {
 	})
 }
 
-func ChangePassword(c *gin.Context) {
-	var body struct {
-		OldPassword string `json:"old_password" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Incorrect data provided",
-		})
-		return
-	}
-
-	// Get user from context
-	userID, exists := c.Get("userID")
-
-	if !exists {
-		c.JSON(http.StatusUnauthorized, models.Error{Message: "UserID not provided"})
-		return
-	}
-
-	// Check old password
-	var user models.User
-
-	result := initializers.DB.Where("ID = ?", userID).First(&user)
-
-	if result.Error != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"success": false,
-			"error":   "Cannot fetch user",
-		})
-
-		c.Abort()
-		return
-	}
-
-	// Compare hashes
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.OldPassword))
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Invalid old password",
-		})
-
-		return
-	}
-
-	// Hash new password
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.NewPassword), 12)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Internal error",
-		})
-
-		return
-	}
-
-	// Update password in DB
-	user.Password = string(hash)
-	result = initializers.DB.Save(&user)
-
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "Internal error",
-		})
-
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Password changed successfully",
-	})
-}
-
+// DemandResetPassword godoc
+// @Summary      Demand Password Reset
+// @Description  Send Token on email when user forgot their password
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/password/forgot [post]
 func DemandResetPassword(c *gin.Context) {
-	var body struct {
-		Email string `json:"email" binding:"required,email"`
-	}
+	var body requests.DemandResetPasswordRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -449,11 +399,17 @@ func DemandResetPassword(c *gin.Context) {
 	})
 }
 
+// ResetPassword godoc
+// @Summary      Password Reset
+// @Description  Reset password with Token obtained from Email and set a new password
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  responses.Success
+// @Failure      400  {object}  responses.Error
+// @Router       /auth/password/forgot/reset [post]
 func ResetPassword(c *gin.Context) {
-	var body struct {
-		Token    string `json:"token" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
+	var body requests.ResetPasswordRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

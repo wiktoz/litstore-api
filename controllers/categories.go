@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"litstore/api/dto/responses"
 	"litstore/api/initializers"
 	"litstore/api/models"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.Category
-// @Failure      401  {object}  models.Error
+// @Failure      401  {object}  responses.Error
 // @Router       /categories/new [post]
 func InsertCategory(c *gin.Context) {
 	var body models.Category
@@ -58,8 +59,8 @@ func InsertCategory(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.Category
-// @Failure      401  {object}  models.Error
-// @Failure      404  {object}  models.Error
+// @Failure      401  {object}  responses.Error
+// @Failure      404  {object}  responses.Error
 // @Router       /categories/id/{id} [put]
 func EditCategoryById(c *gin.Context) {
 
@@ -72,7 +73,7 @@ func EditCategoryById(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {array}   models.Category
-// @Failure      401  {object}  models.Error
+// @Failure      401  {object}  responses.Error
 // @Router       /categories [get]
 func GetCategories(c *gin.Context) {
 	var categories []models.Category
@@ -80,7 +81,7 @@ func GetCategories(c *gin.Context) {
 	result := initializers.DB.Find(&categories)
 
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, models.Error{Message: "Categories not found"})
+		c.JSON(http.StatusNotFound, responses.Error{Message: "Categories not found"})
 		c.Abort()
 		return
 	}
@@ -96,8 +97,8 @@ func GetCategories(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.Category
-// @Failure      401  {object}  models.Error
-// @Failure      404  {object}  models.Error
+// @Failure      401  {object}  responses.Error
+// @Failure      404  {object}  responses.Error
 // @Router       /categories/id/{id} [get]
 func GetCategoryById(c *gin.Context) {
 	var category models.Category
@@ -105,7 +106,7 @@ func GetCategoryById(c *gin.Context) {
 	result := initializers.DB.Where("ID = ?", c.Param("id")).First(&category)
 
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, models.Error{Message: "Category not found"})
+		c.JSON(http.StatusNotFound, responses.Error{Message: "Category not found"})
 		return
 	}
 
@@ -120,8 +121,8 @@ func GetCategoryById(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}   models.Category
-// @Failure      401  {object}  models.Error
-// @Failure      404  {object}  models.Error
+// @Failure      401  {object}  responses.Error
+// @Failure      404  {object}  responses.Error
 // @Router       /categories/slug/{slug} [get]
 func GetCategoryBySlug(c *gin.Context) {
 	var category models.Category
@@ -129,7 +130,7 @@ func GetCategoryBySlug(c *gin.Context) {
 	result := initializers.DB.Where("slug = ?", c.Param("slug")).First(&category)
 
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, models.Error{Message: "Category not found"})
+		c.JSON(http.StatusNotFound, responses.Error{Message: "Category not found"})
 		return
 	}
 
@@ -144,9 +145,9 @@ func GetCategoryBySlug(c *gin.Context) {
 // @Param id path string true "Category ID"
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  models.Error
-// @Failure      401  {object}  models.Error
-// @Failure      404  {object}  models.Error
+// @Success      200  {object}  responses.Error
+// @Failure      401  {object}  responses.Error
+// @Failure      404  {object}  responses.Error
 // @Router       /categories/id/{id} [delete]
 func DeleteCategoryById(c *gin.Context) {
 

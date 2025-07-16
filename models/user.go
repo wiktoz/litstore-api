@@ -11,13 +11,3 @@ type User struct {
 	Roles       []Role        `gorm:"many2many:users_roles" json:"roles"`
 	Permissions []Permission  `gorm:"many2many:users_permissions" json:"permissions"`
 }
-
-type APIGetUser struct {
-	Base
-	Email       string       `json:"email"`
-	Confirmed   bool         `json:"confirmed"`
-	Blocked     bool         `json:"blocked"`
-	Addresses   []Address    `gorm:"foreignKey:UserID;references:ID" json:"addresses"`
-	Roles       []Role       `gorm:"many2many:users_roles" json:"roles"`
-	Permissions []Permission `gorm:"many2many:users_permissions" json:"permissions"`
-}
